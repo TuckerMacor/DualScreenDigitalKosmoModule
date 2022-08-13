@@ -54,7 +54,7 @@ Right now this module is primarily a sequencer but also serves as a digital modu
 | 470                 | 8    |
 
 
-#### Structure - Files on github
+#### Structure - Files on [GitHub](https://github.com/TuckerMacor/DualScreenDigitalKosmoModule/tree/main/3D%20Prints%20and%20CAD%20Files "GitHub")
 
 | Part                                 | Amount|
 |--------------------------------------|------|
