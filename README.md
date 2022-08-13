@@ -43,7 +43,9 @@ Right now this module is primarily a sequencer but also serves as a digital modu
 | 2N3904 transistor   | 2    |
 | Power connector     | 1    |
 | Wire                | Alot |
-| Resistors           |      |
+
+#### Resistors
+
 | 1k                  | 21   |
 | 10k                 | 10   |
 | 100k                | 4    |
