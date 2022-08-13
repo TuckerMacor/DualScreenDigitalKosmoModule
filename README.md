@@ -139,10 +139,15 @@ Right now this module is primarily a sequencer but also serves as a digital modu
 As of August 12 2022 the software requires the following libraries:
 
 Streaming.h - https://github.com/janelia-arduino/Streaming
+
 SdFat.h - https://github.com/greiman/SdFat
+
 Adafruit_GFX.h - https://github.com/adafruit/Adafruit-GFX-Library
+
 Adafruit_SSD1306.h - https://github.com/adafruit/Adafruit_SSD1306
+
 Encoder.h - https://www.pjrc.com/teensy/td_libs_Encoder.html
+
 MCP_DAC.h - https://github.com/RobTillaart/MCP_DAC
 
 Software is definitely in early versions right now and I'll probably update it a quite few times in the future. If you have suggestions let me know.
