@@ -50,13 +50,16 @@ Right now this module is primarily a sequencer but also serves as a digital modu
 
 #### Structure - Files on github
 
-M2 and M3 bolts, nuts ,and standoffs
-Panel - “panel.dxf” *1
-Mounting shelf - “shelf.dxf” *1
-Led Mounts - “LedMount.stl” *2
-RGB Led Mounts “RgbMount.stl” *2
-Button Holder “ButtonHolder.stl” *1
-Buttons - “Button.stl” *13
+| Part                                 | Amount|
+|--------------------------------------|------|
+| M2 and M3 bolts, nuts ,and standoffs | many |
+| Panel - “panel.dxf”                  | 1    |
+| Mounting shelf - “shelf.dxf”         | 1    |
+| Led Mounts - “LedMount.stl”          | 2    |
+| RGB Led Mounts “RgbMount.stl”        | 2    |
+| Button Holder “ButtonHolder.stl”     | 1    |
+| Buttons - “Button.stl”               | 13   |
+
 
 # Arduino Pin Connections
 
