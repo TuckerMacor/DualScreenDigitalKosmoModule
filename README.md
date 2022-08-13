@@ -59,8 +59,8 @@ Right now this module is primarily a sequencer but also serves as a digital modu
 | Part                                 | Amount|
 |--------------------------------------|------|
 | M2 and M3 bolts, nuts ,and standoffs | many |
-| Panel - “panel.dxf”                  | 1    |
-| Mounting shelf - “shelf.dxf”         | 1    |
+| Panel - “Panel.dxf”                  | 1    |
+| Mounting shelf - “Shelf.dxf”         | 1    |
 | Led Mounts - “LedMount.stl”          | 2    |
 | RGB Led Mounts “RgbMount.stl”        | 2    |
 | Button Holder “ButtonHolder.stl”     | 1    |
