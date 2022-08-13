@@ -2,8 +2,6 @@
 
 Right now this module is primarily a sequencer but also serves as a digital module software development platform. It has 8 inputs/outputs 2 of which are on a 12 bit DAC, 2 on PWM capable Arduino pins that have a voltage doubler to reach 10volts, and 4 on analog input pins that can be used as inputs or digital outputs.
 
-![](https://github.com/TuckerMacor/DualScreenDigitalKosmoModule/blob/main/readme-images/design.png)
-
 ![](https://github.com/TuckerMacor/DualScreenDigitalKosmoModule/blob/main/readme-images/20220811_194238.jpg?raw=true)
 
 # Rack Requirements
@@ -68,6 +66,7 @@ Right now this module is primarily a sequencer but also serves as a digital modu
 | Button Holder “ButtonHolder.stl”     | 1    |
 | Buttons - “Button.stl”               | 13   |
 
+![](https://github.com/TuckerMacor/DualScreenDigitalKosmoModule/blob/main/readme-images/design.png)
 
 # Arduino Pin Connections
 
