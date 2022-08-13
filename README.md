@@ -5,15 +5,21 @@ Right now this module is primarily a sequencer but also serves as a digital modu
 ![](https://github.com/TuckerMacor/DualScreenDigitalKosmoModule/blob/main/readme-images/20220811_194238.jpg?raw=true)
 
 #Rack Requirements
+
 ####Power
+
 5 Volt:   150 mA
 12 Volt: 10 mA
 -12 Volt:10 mA
+
 ####Size
+
 20 x 5 CM (KOSMO)
 
 #Parts Requirements
+
 ####Electronic
+
 MCP4922 DAC *1
 TL074 OP-AMP *1
 DIP14 Sockets *2
@@ -40,6 +46,7 @@ Resistors
 470 *8
 
 ####Structure - Files on github
+
 M2 and M3 bolts, nuts ,and standoffs
 Panel - “panel.dxf” *1
 Mounting shelf - “shelf.dxf” *1
@@ -108,12 +115,15 @@ Buttons - “Button.stl” *13
 | D53 | SPI DAC CS              |     |             |
 
 #ProtoBoard Schematic
+
 ![](https://github.com/TuckerMacor/DualScreenDigitalKosmoModule/blob/main/readme-images/ProtoBoard%20Schematic.png?raw=true)
 
 #Mod Potential
+
 8 free pins on Arduino
 
 #Software
+
 As of August 12 2022 the software requires the following libraries:
 
 Streaming.h - https://github.com/janelia-arduino/Streaming
