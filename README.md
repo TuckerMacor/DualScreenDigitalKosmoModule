@@ -4,21 +4,21 @@ Right now this module is primarily a sequencer but also serves as a digital modu
 
 ![](https://github.com/TuckerMacor/DualScreenDigitalKosmoModule/blob/main/readme-images/20220811_194238.jpg?raw=true)
 
-#Rack Requirements
+# Rack Requirements
 
-####Power
+#### Power
 
 5 Volt:   150 mA
 12 Volt: 10 mA
 -12 Volt:10 mA
 
-####Size
+#### Size
 
 20 x 5 CM (KOSMO)
 
 #Parts Requirements
 
-####Electronic
+#### Electronic
 
 MCP4922 DAC *1
 TL074 OP-AMP *1
@@ -45,7 +45,7 @@ Resistors
 100k *4
 470 *8
 
-####Structure - Files on github
+#### Structure - Files on github
 
 M2 and M3 bolts, nuts ,and standoffs
 Panel - “panel.dxf” *1
@@ -55,7 +55,7 @@ RGB Led Mounts “RgbMount.stl” *2
 Button Holder “ButtonHolder.stl” *1
 Buttons - “Button.stl” *13
 
-#Arduino Pin Connections
+# Arduino Pin Connections
 
 |     | Digital Pins            |     | Analog Pins |
 |-----|-------------------------|-----|-------------|
@@ -114,15 +114,15 @@ Buttons - “Button.stl” *13
 | D52 | SPI SCK DAC -SD         |     |             |
 | D53 | SPI DAC CS              |     |             |
 
-#ProtoBoard Schematic
+# ProtoBoard Schematic
 
 ![](https://github.com/TuckerMacor/DualScreenDigitalKosmoModule/blob/main/readme-images/ProtoBoard%20Schematic.png?raw=true)
 
-#Mod Potential
+# Mod Potential
 
 8 free pins on Arduino
 
-#Software
+# Software
 
 As of August 12 2022 the software requires the following libraries:
 
