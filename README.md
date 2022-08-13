@@ -8,11 +8,11 @@ Right now this module is primarily a sequencer but also serves as a digital modu
 
 #### Power
 
-5 Volt:   150 mA
+5 Volt: 150 mA
 
 12 Volt: 10 mA
 
--12 Volt:10 mA
+-12 Volt: 10 mA
 
 #### Size
 
