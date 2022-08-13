@@ -46,6 +46,8 @@ Right now this module is primarily a sequencer but also serves as a digital modu
 
 #### Resistors
 
+| Value               | Amount|
+|---------------------|------|
 | 1k                  | 21   |
 | 10k                 | 10   |
 | 100k                | 4    |
