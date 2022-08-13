@@ -277,9 +277,8 @@ void saveSequanceToSD(byte saveSlot) {//saves sequance data as a .csv on the sd 
     displayA.println(F("Couldn't Save"));
     displayA.println(F("bad sd card?"));
     displayA.println(F("no sd card?"));
-    displayA.println(F("GIT GUD!"));
     displayA.display();
-    delay(5000);
+    delay(4000);
   }
   actionLayer = 0;
 }
@@ -329,12 +328,8 @@ void loadSequanceFromSD(byte saveSlot) {//load sequance data from a .csv on the 
     displayA.println(F("Couldn't Load"));
     displayA.println(F("bad file?"));
     displayA.println(F("file dosn't exist?"));
-    displayA.println(F("do I exist?"));
-    displayA.println(F("do you exist?"));
-    displayA.println(F("what am i?"));
-    displayA.println(F("No, Don't tell me"));
     displayA.display();
-    delay(5000);
+    delay(4000);
   }
   actionLayer = 0;
 }
