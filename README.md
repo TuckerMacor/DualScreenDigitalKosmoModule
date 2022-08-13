@@ -16,34 +16,37 @@ Right now this module is primarily a sequencer but also serves as a digital modu
 
 20 x 5 CM (KOSMO)
 
-#Parts Requirements
+# Parts Requirements
 
 #### Electronic
 
-MCP4922 DAC *1
-TL074 OP-AMP *1
-DIP14 Sockets *2
-Prototyping board *1
-SD Card module *1
-SD Card 2GB or less *1
-RGB Leds *6
-Leds *8
-Arduino Pro Mega *1
-¼ Jack Sockets *8
-Rotary Encoder *2
-OLED 128x64 *2
-Knobs *2
-Buttons *13
-10k trimmer *2
-5k trimmer *2
-2N3904 transistor*2
-Power connector *1
-Wire *alot
-Resistors
-1k  *21
-10k *10
-100k *4
-470 *8
+| Part                | Amount|
+|---------------------|------|
+| MCP4922 DAC         | 1    |
+| TL074 OP-AMP        | 1    |
+| DIP14 Sockets       | 2    |
+| Prototyping board   | 1    |
+| SD Card module      | 1    |
+| SD Card 2GB or less | 1    |
+| RGB Leds            | 6    |
+| Leds                | 8    |
+| Arduino Pro Mega    | 1    |
+| ¼ Jack Sockets      | 8    |
+| Rotary Encoder      | 2    |
+| OLED 128x64         | 2    |
+| Knobs               | 2    |
+| Buttons             | 13   |
+| 10k trimmer         | 2    |
+| 5k trimmer          | 2    |
+| 2N3904 transistor   | 2    |
+| Power connector     | 1    |
+| Wire                | Alot |
+| Resistors           |      |
+| 1k                  | 21   |
+| 10k                 | 10   |
+| 100k                | 4    |
+| 470                 | 8    |
+
 
 #### Structure - Files on github
 
