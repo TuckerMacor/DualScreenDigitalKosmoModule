@@ -42,7 +42,9 @@ int currentStep[2] = {0, 0};                       //what step is the sequence c
 boolean currentlyEditingStep[2] = {false, false};  //what value are you changing 0==editing step 2==editing step value 3==gate time 4==gate toggle
 int editingStep[2] = {0, 0};                       //which step are you editing
 int stepValues[128][2];                            //this is where are the values for every step are stored
-bool stepGates[128][2];                            //should this step have a gate
+int stepGates[128][2];                             //gate mode for this step
+int stepGatesAmount[128][2];                       //how many gates for each step
+int currentStepGatesAmount[2];                     //how many gates have happend for this step
 int clockMode[2] = {1, 1};                         //where should the clock come from? 0=Internal 1=OFF 2=External 3=Sync
 bool reverseSequance[2] = {false, false};          //shoud the sequence reverse
 float internalClockSpeed = 90;                     //internal Clock Speed in beats per minute
@@ -52,36 +54,37 @@ unsigned long lastInternalClock = 0;               //last time the internal cloc
 #define maxSteps 127                               //max step count (pretty sure changing this will break stuff)
 #define minSteps 2                                 //minimum step count
 #define ADCMAX 4095                                //max value of the adc
+#define maxPerStepGateCount 16                     //max gates per step
 //serial debug prints
 unsigned long lastSerialPrint = 0;                 //last time the serial data was printed
 #define serialPrintInterval -1                     //set to -1 to disable
 //other variables
 int actionLayer = 0;                              //defines what screen to display and what the buttons should do
-/* 
- * 0-99 reserved for sequancer mode
- * 0=main sequancer page
- * 1=left step count adjustment
- * 2=right step count adjustment 
- * 3=internal clock speed adjustment
- * 4=clock multiply adjustment
- * 5=left gate time adjustment
- * 6=right gate time adjustment
- * 7=save file selection
- * 8=load file selection
- * 100-199 reserved for clock mode (planned addition)
- * 200-299 reserved for random number generator mode (planned addition)
- * 300-399 reserved for envelope generator mode (planned addition)
- * 400-499 reserved for clock sync LFO mode (planned addition)
- * 500-599 reserved for quantizer mode (planned addition)
- * 600-699 reserved for sample and hold mode (planned addition)
- * 700-799 reserved for drum sequancer mode (planned addition)
- * 800-899 reserved for digital VCO mode (not sure if dac is fast enough and won't be able to draw screen when output is working) (planned addition)
- * 900-999 reserved for alternate sequancer mode (i have an idea for a diffent user interface that could be better but shouldn't replace the existing one) (planned addition)
- * 1000-1099 reserved for tuner mode to detect frequencies and help tune stuff (planned addition)
- */
+/*
+   0-99 reserved for sequancer mode
+   0=main sequancer page
+   1=left step count adjustment
+   2=right step count adjustment
+   3=internal clock speed adjustment
+   4=clock multiply adjustment
+   5=left gate time adjustment
+   6=right gate time adjustment
+   7=save file selection
+   8=load file selection
+   100-199 reserved for clock mode (planned addition)
+   200-299 reserved for random number generator mode (planned addition)
+   300-399 reserved for envelope generator mode (planned addition)
+   400-499 reserved for clock sync LFO mode (planned addition)
+   500-599 reserved for quantizer mode (planned addition)
+   600-699 reserved for sample and hold mode (planned addition)
+   700-799 reserved for drum sequancer mode (planned addition)
+   800-899 reserved for digital VCO mode (not sure if dac is fast enough and won't be able to draw screen when output is working) (planned addition)
+   900-999 reserved for alternate sequancer mode (i have an idea for a diffent user interface that could be better but shouldn't replace the existing one) (planned addition)
+   1000-1099 reserved for tuner mode to detect frequencies and help tune stuff (planned addition)
+*/
 bool drawScreen[2] = {true, true};                 //should the oleds be updated
 bool rangeSelect[2] = {0, 0};                      //what voltage range to use
-bool gateTrigger[2] = {0, 0};                      //has a gate been triggerd
+int gateTrigger[2] = {0, 0};                       //has a gate been triggerd and in what mode 0=off/1=gate per clock/2=single gate/3=long gate
 int gateTime[2] = {50, 50};                        //how long should the gate open for (NOT WORKING PROPERLY updating the oled screen takes a long time and delays the checking for if gates should turn off)
 unsigned long gateTriggerTime[2] = {0, 0};         //when was the gate trigged
 #define gateMinTime 0                              //minimum gate time
@@ -92,10 +95,10 @@ bool lastClockInputState[2];                       //last state of the clock inp
 unsigned long lastClockInputTime;                  //last time the clock input did somthing
 unsigned long clockInputDebounceDelay = 3;         //AHHHHHHHHHHHHHHHHHH
 //sd card save and loading variables
-const String filePrefix = "SEQ.";                  //start of sequance file names
+const String sequnacerFilePrefix = "SEQ.";                  //start of sequance file names
 int saveLoadSelect = 0;                            //which file to save/load from
 #define maxSaves 128                               //max amount of save files   (safe to increase if you need)
-#define readArrayLength (maxSteps + 1) * 4 + 4     //length of the temporary array that stores data loaded from the sd card
+#define readArrayLength (maxSteps + 1) * 6 + 7     //length of the temporary array that stores data loaded from the sd card
 //note to remember to add an overwright file confirmation at some point.
 
 void setup() {
@@ -151,6 +154,7 @@ void setup() {
   for (byte i = 0; i < 128; i++) {//turn on step gates because sound
     for (byte u = 0; u < 2; u++) {
       stepGates[i][u] = HIGH;
+      stepGatesAmount[i][u] = 1;
     }
   }
   for (byte i = 0; i < 2; i++) {//range select pins
@@ -189,8 +193,10 @@ void loop() {
       currentStep[i] = editingStep[i];
     }
   }
+  writeAnalogOutputs();
   internalClock();//do clock stuff
   externalClock();//do other more different clock stuff
+  turnOffGates();//check if gates should turn off and if they should turn them off
   for (byte i = 0; i < 2; i++) { //what screen to draw
     if (drawScreen[i] == true) {
       drawScreen[i] = false;
@@ -226,12 +232,11 @@ void loop() {
       }
     }
   }
-  writeOutputs();//write to the outputs
 }
 
 
 void saveSequanceToSD(byte saveSlot) {//saves sequance data as a .csv on the sd card
-  String fileName = filePrefix;
+  String fileName = sequnacerFilePrefix;
   fileName = fileName + saveSlot + ".csv";
   file = SD.open(fileName, FILE_WRITE);
   if (file) {
@@ -260,6 +265,18 @@ void saveSequanceToSD(byte saveSlot) {//saves sequance data as a .csv on the sd 
       }
     }
     file.print("\r\n");
+    for (int i = 0; i < 2; i++) {
+      for (int u = 0; u < (maxSteps + 1); u++) {
+        file.print(stepGatesAmount[u][i]);
+        if (u < maxSteps) {
+          file.print(",");
+        }
+      }
+      if (i < 1) {
+        file.print("\r\n");
+      }
+    }
+    file.print("\r\n");
     file.print(totalStepCount[0]);
     file.print(",");
     file.print(totalStepCount[1]);
@@ -267,6 +284,12 @@ void saveSequanceToSD(byte saveSlot) {//saves sequance data as a .csv on the sd 
     file.print(gateTime[0]);
     file.print(",");
     file.print(gateTime[1]);
+    file.print(",");
+    file.print(clockMode[0]);
+    file.print(",");
+    file.print(clockMode[1]);
+    file.print(",");
+    file.print(internalClockSpeed);
     file.close();
   }
   else {
@@ -285,7 +308,7 @@ void saveSequanceToSD(byte saveSlot) {//saves sequance data as a .csv on the sd 
 
 
 void loadSequanceFromSD(byte saveSlot) {//load sequance data from a .csv on the sd card (from the ReadCsvArray example included with SdFat lib)
-  String fileName = filePrefix;
+  String fileName = sequnacerFilePrefix;
   fileName = fileName + saveSlot + ".csv";
   file = SD.open(fileName);
   if (file) {
@@ -306,18 +329,27 @@ void loadSequanceFromSD(byte saveSlot) {//load sequance data from a .csv on the 
       stepValues[i][0] = tempArrayFromSD[i];
     }
     for (int i = 0; i < maxSteps + 1; i++) {
-      stepValues[i][1] = tempArrayFromSD[i + 128];
+      stepValues[i][1] = tempArrayFromSD[i + ((maxSteps + 1) * 1)];
     }
     for (int i = 0; i < maxSteps + 1; i++) {
-      stepGates[i][0] = tempArrayFromSD[i + 256];
+      stepGates[i][0] = tempArrayFromSD[i + ((maxSteps + 1) * 2)];
     }
     for (int i = 0; i < maxSteps + 1; i++) {
-      stepGates[i][1] = tempArrayFromSD[i + 384];
+      stepGates[i][1] = tempArrayFromSD[i + ((maxSteps + 1) * 3)];
     }
-    totalStepCount[0] = tempArrayFromSD[512];
-    totalStepCount[1] = tempArrayFromSD[513];
-    gateTime[0] = tempArrayFromSD[514];
-    gateTime[1] = tempArrayFromSD[515];
+    for (int i = 0; i < maxSteps + 1; i++) {
+      stepGatesAmount[i][0] = tempArrayFromSD[i + ((maxSteps + 1) * 4)];
+    }
+    for (int i = 0; i < maxSteps + 1; i++) {
+      stepGatesAmount[i][1] = tempArrayFromSD[i + ((maxSteps + 1) * 5)];
+    }
+    totalStepCount[0] = tempArrayFromSD[((127 + 1) * 6) +0];
+    totalStepCount[1] = tempArrayFromSD[((127 + 1) * 6) +1];
+    gateTime[0] = tempArrayFromSD[((127 + 1) * 6) +2];
+    gateTime[1] = tempArrayFromSD[((127 + 1) * 6) +3];
+    clockMode[0] = tempArrayFromSD[((127 + 1) * 6) +4];
+    clockMode[1] = tempArrayFromSD[((127 + 1) * 6) +5];
+    internalClockSpeed = tempArrayFromSD[((127 + 1) * 6) +6];
     file.close();
   }
   else {
@@ -335,93 +367,7 @@ void loadSequanceFromSD(byte saveSlot) {//load sequance data from a .csv on the 
 }
 
 
-void drawSave() {//ask the user where to save to
-  displayA.clearDisplay();
-  displayA.setTextSize(1);
-  displayA.setTextColor(SSD1306_WHITE);
-  displayA.setCursor(0, 0);
-  displayA.print(F("Select File To Save"));
-  displayA.setTextSize(2);
-  displayA.setCursor(0, 12);
-  displayA << F("File: ") << saveLoadSelect << endl;
-  displayA.setTextSize(1);
-  displayA.setCursor(0, 32);
-  displayA.println(F("left to cancel"));
-  displayA.println(F("Right to confirm"));
-  displayA.display();
-}
-
-
-void drawLoad() {//ask the user where to load from
-  displayA.clearDisplay();
-  displayA.setTextSize(1);
-  displayA.setTextColor(SSD1306_WHITE);
-  displayA.setCursor(0, 0);
-  displayA.print(F("Select File To Load"));
-  displayA.setTextSize(2);
-  displayA.setCursor(0, 12);
-  displayA << F("File: ") << saveLoadSelect << endl;
-  displayA.setTextSize(1);
-  displayA.setCursor(0, 32);
-  displayA.println(F("left to cancel"));
-  displayA.println(F("Right to confirm"));
-  displayA.display();
-}
-
-
-void externalClock() {//do external clock stuff
-  for (byte i = 0; i < 2; i++) {
-    int raw = analogRead(clockInputPins[i]);
-    int reading;
-    if (raw >= 300) {
-      reading = HIGH;
-    }
-    else {
-      reading = LOW;
-    }
-    digitalWrite(ledPins[((!i + 1) * 4) - 4], reading);
-    if (reading != lastClockInputState[i]) {
-      lastClockInputTime = millis();
-    }
-    if ((millis() - lastClockInputTime) > clockInputDebounceDelay) {
-      if (reading != clockInputState[i]) {
-        clockInputState[i] = reading;
-        if (clockInputState[i] == HIGH) {
-          if (clockMode[i] == 2) {
-            if (reverseSequance[i] == true) {
-              currentStep[i]--;
-              triggerGate(i, 1);
-            }
-            else {
-              currentStep[i]++;
-              triggerGate(i, 0);
-            }
-          }
-          if (clockMode[1] == 3 && clockMode[0] == 2 && i == 0) {
-            if (reverseSequance[1] == true) {
-              currentStep[1]--;
-              triggerGate(1, 1);
-            }
-            else {
-              currentStep[1]++;
-              triggerGate(1, 0);
-            }
-            if (currentStep[1] > totalStepCount[1]) {
-              currentStep[1] = 0;
-            }
-            else if (currentStep[1] < 0) {
-              currentStep[1] = totalStepCount[1];
-            }
-          }
-        }
-      }
-    }
-    lastClockInputState[i] = reading;
-  }
-}
-
-
-void writeOutputs() {//write to the analog outs, gate outputs, and various leds
+void turnOffGates() {//check if gates should turn off and if they should turn them off
   for (byte i = 0; i < 2; i++) {
     if (clockMode[i] == 1 && noClockGates == true) {
       digitalWrite(gatePins[i], HIGH);
@@ -430,17 +376,7 @@ void writeOutputs() {//write to the analog outs, gate outputs, and various leds
       digitalWrite(rgbPins[((i + 1) * 3) - 2][1], LOW);
       digitalWrite(rgbPins[((i + 1) * 3) - 2][2], HIGH);
     }
-    else if (gateTrigger[i] == 1) {
-      if (millis() - gateTriggerTime[i] > gateTime[i]) {
-        digitalWrite(gatePins[i], LOW);
-        digitalWrite(ledPins[((!i + 1) * 4) - 2], LOW);
-        digitalWrite(rgbPins[((i + 1) * 3) - 2][0], LOW);
-        digitalWrite(rgbPins[((i + 1) * 3) - 2][1], LOW);
-        digitalWrite(rgbPins[((i + 1) * 3) - 2][2], LOW);
-        gateTrigger[i] = 0;
-      }
-    }
-    else {
+    else if (millis() - gateTriggerTime[i] > gateTime[i] && (gateTrigger[i] == 1 || (gateTrigger[i] == 2 && currentStepGatesAmount[i] > 0))) {
       digitalWrite(gatePins[i], LOW);
       digitalWrite(ledPins[((!i + 1) * 4) - 2], LOW);
       digitalWrite(rgbPins[((i + 1) * 3) - 2][0], LOW);
@@ -448,23 +384,38 @@ void writeOutputs() {//write to the analog outs, gate outputs, and various leds
       digitalWrite(rgbPins[((i + 1) * 3) - 2][2], LOW);
     }
   }
-  MCP.fastWriteB(stepValues[currentStep[0]][0]);
-  analogWrite(ledPins[7], map(stepValues[currentStep[0]][0], 0, ADCMAX, 0, 255));
-  MCP.fastWriteA(stepValues[currentStep[1]][1]);
-  analogWrite(ledPins[3], map(stepValues[currentStep[1]][1], 0, ADCMAX, 0, 255));
 }
 
 
 void triggerGate(byte whichGate, byte Direction) {//call this to trigger a gate. first value is which gate to trigger and seccond is for led colour to indicate reverse or forwards step
-  if (currentStep[whichGate] > totalStepCount[whichGate]) {
-    currentStep[whichGate] = 0;
+  if (currentStepGatesAmount[whichGate] == stepGatesAmount[currentStep[whichGate]][whichGate]) {
+    if (Direction == 1) {
+      currentStep[whichGate]--;
+      if (currentStep[whichGate] < 0) {
+        currentStep[whichGate] = totalStepCount[whichGate];
+      }
+    }
+    else {
+      currentStep[whichGate]++;
+      if (currentStep[whichGate] > totalStepCount[whichGate]) {
+        currentStep[whichGate] = 0;
+      }
+    }
+    currentStepGatesAmount[whichGate] = 0;
   }
-  else if (currentStep[whichGate] < 0) {
-    currentStep[whichGate] = totalStepCount[whichGate];
+  gateTrigger[whichGate] = stepGates[currentStep[whichGate]][whichGate];
+  if (gateTrigger[whichGate] == 3 && currentStepGatesAmount[whichGate] == (stepGatesAmount[whichGate] - 1)) {
+    gateTrigger[whichGate] = 1;
   }
-  writeOutputs();
-  gateTrigger[whichGate] = HIGH;
-  if (stepGates[currentStep[whichGate]][whichGate] == HIGH) {
+  writeAnalogOutputs;
+  if (gateTrigger[whichGate] == 0) {//no gate
+    digitalWrite(gatePins[whichGate], LOW);
+    digitalWrite(ledPins[((!whichGate + 1) * 4) - 2], LOW);
+    digitalWrite(rgbPins[((whichGate + 1) * 3) - 2][0], LOW);
+    digitalWrite(rgbPins[((whichGate + 1) * 3) - 2][1], LOW);
+    digitalWrite(rgbPins[((whichGate + 1) * 3) - 2][2], LOW);
+  }
+  else if (gateTrigger[whichGate] == 1 || ((gateTrigger[whichGate] == 2 || gateTrigger[whichGate] == 3) && currentStepGatesAmount[whichGate] == 0)) {
     digitalWrite(gatePins[whichGate], HIGH);
     digitalWrite(ledPins[((!whichGate + 1) * 4) - 2], HIGH);
     if (Direction == 1) {
@@ -478,10 +429,19 @@ void triggerGate(byte whichGate, byte Direction) {//call this to trigger a gate.
       digitalWrite(rgbPins[((whichGate + 1) * 3) - 2][2], LOW);
     }
   }
+  currentStepGatesAmount[whichGate]++;
   gateTriggerTime[whichGate] = millis();
   if (actionLayer == 0) {
     drawScreen[whichGate] = true;
   }
+}
+
+
+void writeAnalogOutputs() {
+  MCP.fastWriteB(stepValues[currentStep[0]][0]);
+  analogWrite(ledPins[7], map(stepValues[currentStep[0]][0], 0, ADCMAX, 0, 255));
+  MCP.fastWriteA(stepValues[currentStep[1]][1]);
+  analogWrite(ledPins[3], map(stepValues[currentStep[1]][1], 0, ADCMAX, 0, 255));
 }
 
 
@@ -708,6 +668,12 @@ void buttonActions() {//if buttons got pressed do stuff
               digitalWrite(rangeSelectPins[0], rangeSelect[0]);
               updateRangeSelectLeds();
             }
+            else if (buttonState[11] == LOW) {
+              stepGatesAmount[editingStep[0]][0]--;
+              if (stepGatesAmount[editingStep[0]][0] < 1) {
+                stepGatesAmount[editingStep[0]][0] = maxPerStepGateCount;
+              }
+            }
             else {
               if (buttonState[12] == false) {
                 editingStep[0] = editingStep[0] - 10;
@@ -729,6 +695,12 @@ void buttonActions() {//if buttons got pressed do stuff
               digitalWrite(rangeSelectPins[0], rangeSelect[0]);
               updateRangeSelectLeds();
             }
+            else if (buttonState[11] == LOW) {
+              stepGatesAmount[editingStep[0]][0]++;
+              if (stepGatesAmount[editingStep[0]][0] > maxPerStepGateCount) {
+                stepGatesAmount[editingStep[0]][0] = 1;
+              }
+            }
             else {
               if (buttonState[12] == false) {
                 editingStep[0] = editingStep[0] + 10;
@@ -740,7 +712,10 @@ void buttonActions() {//if buttons got pressed do stuff
             break;
           case 2:
             if (buttonState[11] == LOW) {
-              stepGates[editingStep[0]][0] = !stepGates[editingStep[0]][0];
+              stepGates[editingStep[0]][0]++;
+              if (stepGates[editingStep[0]][0] > 3) {
+                stepGates[editingStep[0]][0] = 0;
+              }
             }
             break;
           case 3:
@@ -754,6 +729,12 @@ void buttonActions() {//if buttons got pressed do stuff
               rangeSelect[1] = LOW;
               digitalWrite(rangeSelectPins[1], rangeSelect[1]);
               updateRangeSelectLeds();
+            }
+            else if (buttonState[11] == LOW) {
+              stepGatesAmount[editingStep[1]][1]--;
+              if (stepGatesAmount[editingStep[1]][1] < 1) {
+                stepGatesAmount[editingStep[1]][1] = maxPerStepGateCount;
+              }
             }
             else {
               if (buttonState[12] == false) {
@@ -776,6 +757,12 @@ void buttonActions() {//if buttons got pressed do stuff
               digitalWrite(rangeSelectPins[1], rangeSelect[1]);
               updateRangeSelectLeds();
             }
+            else if (buttonState[11] == LOW) {
+              stepGatesAmount[editingStep[1]][1]++;
+              if (stepGatesAmount[editingStep[1]][1] > maxPerStepGateCount) {
+                stepGatesAmount[editingStep[1]][1] = 1;
+              }
+            }
             else {
               if (buttonState[12] == false) {
                 editingStep[1] = editingStep[1] + 10;
@@ -787,7 +774,10 @@ void buttonActions() {//if buttons got pressed do stuff
             break;
           case 5:
             if (buttonState[11] == LOW) {
-              stepGates[editingStep[1]][1] = !stepGates[editingStep[1]][1];
+              stepGates[editingStep[1]][1]++;
+              if (stepGates[editingStep[1]][1] > 3) {
+                stepGates[editingStep[1]][1] = 0;
+              }
             }
             break;
           case 6:
@@ -1222,6 +1212,40 @@ void drawRightGateTime() {//ask the user how long to open the right gate
 }
 
 
+void drawSave() {//ask the user where to save to
+  displayA.clearDisplay();
+  displayA.setTextSize(1);
+  displayA.setTextColor(SSD1306_WHITE);
+  displayA.setCursor(0, 0);
+  displayA.print(F("Select File To Save"));
+  displayA.setTextSize(2);
+  displayA.setCursor(0, 12);
+  displayA << F("File: ") << saveLoadSelect << endl;
+  displayA.setTextSize(1);
+  displayA.setCursor(0, 32);
+  displayA.println(F("left to cancel"));
+  displayA.println(F("Right to confirm"));
+  displayA.display();
+}
+
+
+void drawLoad() {//ask the user where to load from
+  displayA.clearDisplay();
+  displayA.setTextSize(1);
+  displayA.setTextColor(SSD1306_WHITE);
+  displayA.setCursor(0, 0);
+  displayA.print(F("Select File To Load"));
+  displayA.setTextSize(2);
+  displayA.setCursor(0, 12);
+  displayA << F("File: ") << saveLoadSelect << endl;
+  displayA.setTextSize(1);
+  displayA.setCursor(0, 32);
+  displayA.println(F("left to cancel"));
+  displayA.println(F("Right to confirm"));
+  displayA.display();
+}
+
+
 void drawSequancerMainPage(byte whichScreen) {//draw the main sequancer page 0 for left 1 for right (I love the streaming library)
   if (whichScreen == 0) {
     displayA.clearDisplay();
@@ -1253,11 +1277,13 @@ void drawSequancerMainPage(byte whichScreen) {//draw the main sequancer page 0 f
     displayA.setCursor(51, 28);
     displayA << _WIDTHZ((stepValues[currentStep[0]][0]), 4) << endl;
     if (reverseSequance[0] == true) {
-      displayA.setCursor(15, 28);
+      displayA.setCursor(28, 28);
       displayA << F("REV") << endl;
     }
+    displayA.setCursor(3, 28);
+    displayA << currentStepGatesAmount[0] << F("/") << stepGatesAmount[currentStep[0]][0] << endl;
     displayA.setCursor(88, 28);
-    displayA << F("Gate:") << ((stepGates[editingStep[0]][0])) << endl;
+    displayA << stepGatesAmount[editingStep[0]][0] << " : " << ((stepGates[editingStep[0]][0])) << endl;
     displayA.setTextSize(2);
     displayA.setCursor(10, 45);
     displayA << _WIDTHZ((editingStep[0] + 1), 3) << endl;
@@ -1297,11 +1323,13 @@ void drawSequancerMainPage(byte whichScreen) {//draw the main sequancer page 0 f
     displayB.setCursor(51, 28);
     displayB << _WIDTHZ((stepValues[currentStep[1]][1]), 4) << endl;
     if (reverseSequance[1] == true) {
-      displayB.setCursor(15, 28);
+      displayB.setCursor(28, 28);
       displayB << F("REV") << endl;
     }
+    displayB.setCursor(3, 28);
+    displayB << currentStepGatesAmount[1] << F("/") << stepGatesAmount[currentStep[1]][1] << endl;
     displayB.setCursor(88, 28);
-    displayB << F("Gate:") << ((stepGates[editingStep[1]][1])) << endl;
+    displayB << stepGatesAmount[editingStep[1]][1] << " : "  << ((stepGates[editingStep[1]][1])) << endl;
     displayB.setTextSize(2);
     displayB.setCursor(10, 45);
     displayB << _WIDTHZ((editingStep[1] + 1), 3) << endl;
@@ -1359,24 +1387,42 @@ void readButtons() {//check if buttons got pressed
 void internalClock() {//do internal clock stuff
   if (clockMode[0] == 0 && (millis() - lastInternalClock) > ((60 / internalClockSpeed) * 1000)) {
     lastInternalClock = millis();
-    if (reverseSequance[0] == true) {
-      currentStep[0]--;
-      triggerGate(0, 1);
+    triggerGate(0, reverseSequance[0]);
+    if (clockMode[1] == 3) {
+      triggerGate(1, reverseSequance[0]);
+    }
+  }
+}
+
+
+void externalClock() {//do external clock stuff
+  for (byte i = 0; i < 2; i++) {
+    int raw = analogRead(clockInputPins[i]);
+    int reading;
+    if (raw >= 300) {
+      reading = HIGH;
     }
     else {
-      currentStep[0]++;
-      triggerGate(0, 0);
+      reading = LOW;
     }
-    if (clockMode[1] == 3) {
-      if (reverseSequance[1] == true) {
-        currentStep[1]--;
-        triggerGate(1, 1);
-      }
-      else {
-        currentStep[1]++;
-        triggerGate(1, 0);
+    digitalWrite(ledPins[((!i + 1) * 4) - 4], reading);
+    if (reading != lastClockInputState[i]) {
+      lastClockInputTime = millis();
+    }
+    if ((millis() - lastClockInputTime) > clockInputDebounceDelay) {
+      if (reading != clockInputState[i]) {
+        clockInputState[i] = reading;
+        if (clockInputState[i] == HIGH) {
+          if (clockMode[i] == 2) {
+            triggerGate(i, reverseSequance[i]);
+          }
+          if (clockMode[1] == 3 && clockMode[0] == 2 && i == 0) {
+            triggerGate(1, reverseSequance[1]);
+          }
+        }
       }
     }
+    lastClockInputState[i] = reading;
   }
 }
 
@@ -1445,6 +1491,7 @@ void wrapCursor() {//makes numbers not be too big or too smol
     }
   }
 }
+
 
 size_t readField(File* file, char* str, size_t size, const char* delim) {//from the sdfat library, does stuff when reading from the csv files
   char ch;
