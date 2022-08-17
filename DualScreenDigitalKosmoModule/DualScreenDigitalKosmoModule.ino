@@ -1389,7 +1389,7 @@ void internalClock() {//do internal clock stuff
     lastInternalClock = millis();
     triggerGate(0, reverseSequance[0]);
     if (clockMode[1] == 3) {
-      triggerGate(1, reverseSequance[0]);
+      triggerGate(1, reverseSequance[1]);
     }
   }
 }
