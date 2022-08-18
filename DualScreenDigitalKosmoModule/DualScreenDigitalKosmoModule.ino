@@ -101,6 +101,7 @@ int saveLoadSelect = 0;                            //which file to save/load fro
 #define readArrayLength (maxSteps + 1) * 6 + 7     //length of the temporary array that stores data loaded from the sd card
 //note to remember to add an overwright file confirmation at some point.
 
+
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
@@ -343,13 +344,13 @@ void loadSequanceFromSD(byte saveSlot) {//load sequance data from a .csv on the 
     for (int i = 0; i < maxSteps + 1; i++) {
       stepGatesAmount[i][1] = tempArrayFromSD[i + ((maxSteps + 1) * 5)];
     }
-    totalStepCount[0] = tempArrayFromSD[((127 + 1) * 6) +0];
-    totalStepCount[1] = tempArrayFromSD[((127 + 1) * 6) +1];
-    gateTime[0] = tempArrayFromSD[((127 + 1) * 6) +2];
-    gateTime[1] = tempArrayFromSD[((127 + 1) * 6) +3];
-    clockMode[0] = tempArrayFromSD[((127 + 1) * 6) +4];
-    clockMode[1] = tempArrayFromSD[((127 + 1) * 6) +5];
-    internalClockSpeed = tempArrayFromSD[((127 + 1) * 6) +6];
+    totalStepCount[0] = tempArrayFromSD[((127 + 1) * 6) + 0];
+    totalStepCount[1] = tempArrayFromSD[((127 + 1) * 6) + 1];
+    gateTime[0] = tempArrayFromSD[((127 + 1) * 6) + 2];
+    gateTime[1] = tempArrayFromSD[((127 + 1) * 6) + 3];
+    clockMode[0] = tempArrayFromSD[((127 + 1) * 6) + 4];
+    clockMode[1] = tempArrayFromSD[((127 + 1) * 6) + 5];
+    internalClockSpeed = tempArrayFromSD[((127 + 1) * 6) + 6];
     file.close();
   }
   else {
