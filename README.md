@@ -1,6 +1,6 @@
 # Dual Screen Digital Kosmo Module
 
-Right now this module is primarily a sequencer but also serves as a digital module software development platform. It has 8 inputs/outputs 2 of which are on a 12 bit DAC, 2 on PWM capable Arduino pins that have a voltage doubler to reach 10 volts, and 4 on analog input pins that can be used as inputs or digital outputs.
+Right now this module is primarily a sequencer but also serves as a digital module software development platform. It has 8 inputs/outputs 2 of which are on a 12 bit DAC that has output circuitry to switch between 0 to 5 volts high resolution or 0 to 10 volts slightly less high resolution, 2 on PWM capable Arduino pins that have a voltage doubler to reach 10 volts, and 4 on analog input pins that can be used as inputs or digital outputs.
 
 ![](https://github.com/TuckerMacor/DualScreenDigitalKosmoModule/blob/main/readme-images/20220811_194238.jpg?raw=true)
 
@@ -133,7 +133,7 @@ Right now this module is primarily a sequencer but also serves as a digital modu
 
 ## Output Range Switch
 
-The output voltage range of the analog outputs is software adjustable for 0 to 5 volts high resolution or 0 to 10 volts slightly less high res
+The output voltage range of the analog outputs is software adjustable for 0 to 5 volts high resolution or 0 to 10 volts slightly less high res.
 
 # Mod Potential
 
