@@ -127,6 +127,10 @@ Right now this module is primarily a sequencer but also serves as a digital modu
 | D52 | SPI SCK DAC -SD         |     |             |
 | D53 | SPI DAC CS              |     |             |
 
+#### Output Range Switch
+
+The output voltage range of the analog outputs is software adjustable for 0 to 5 volts high resolution or 0 to 10 volts slightly less high res
+
 # ProtoBoard Schematic
 
 ![](https://github.com/TuckerMacor/DualScreenDigitalKosmoModule/blob/main/readme-images/ProtoBoard%20Schematic.png?raw=true)
